@@ -1,0 +1,81 @@
+# Configuration for different execution environments
+# These are top-level Spark properties or spark-submit options.
+# Job-specific Spark settings can be in the job's own config file and merged.
+
+on_premise:
+  spark_master: "yarn"
+  deploy_mode: "cluster" # or "client"
+  # Additional spark-submit options for on-premise
+  submit_options:
+    - "--conf spark.driver.memory=1g"
+    - "--conf spark.executor.memory=2g"
+    - "--conf spark.executor.instances=2"
+  # Environment-specific properties to be passed as --conf to spark-submit
+  spark_properties:
+    spark.yarn.queue: "default_queue"
+    # Example: "spark.hadoop.fs.defaultFS": "hdfs://your-namenode:8020"
+
+gcp_dataproc:
+  spark_master: "yarn" # Usually yarn for DataProc, cluster name handled by gcloud command
+  deploy_mode: "cluster"
+  # Additional spark-submit options for GCP DataProc
+  # Often, many settings are handled by the `gcloud dataproc jobs submit pyspark` command itself.
+  # This section can include common overrides or specific configurations.
+  submit_options:
+    - "--conf spark.driver.memory=1g" # Example, might be managed by DataProc
+    - "--conf spark.executor.memory=2g" # Example
+    - "--conf spark.executor.instances=2" # Example
+  spark_properties:
+    # Example: "spark.hadoop.google.cloud.auth.service.account.enable": "true"
+    # Example: "spark.hadoop.fs.gs.impl": "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
+    # These might be set by DataProc by default.
+    "spark.eventLog.enabled": "true"
+    # "spark.eventLog.dir": "gs://your-dataproc-staging-bucket/spark-logs/" # Often configured by DataProc
+
+qa:
+  spark_master: "yarn" # Or specific QA Spark master, e.g., spark://qa-master:7077
+  deploy_mode: "cluster" # Or "client" depending on QA setup
+  submit_options:
+    - "--conf spark.driver.memory=1g"
+    - "--conf spark.executor.memory=2g"
+    - "--conf spark.executor.instances=2"
+  spark_properties:
+    spark.yarn.queue: "qa_queue" # Example: specific QA queue
+    # Add other QA-specific Spark properties here
+    # e.g., paths to QA databases, different logging levels for QA
+    "spark.app.name.suffix": "_QA" # Example to differentiate app names in QA
+
+production:
+  spark_master: "yarn" # Or specific Production Spark master, e.g., spark://prod-master:7077 or k8s://...
+  deploy_mode: "cluster"
+  submit_options:
+    # Production configurations should be carefully tuned for stability and performance
+    - "--conf spark.driver.memory=4g"  # Example: Larger memory for Prod
+    - "--conf spark.executor.memory=8g" # Example: Larger memory for Prod
+    - "--conf spark.executor.instances=10" # Example: More instances for Prod
+    - "--conf spark.sql.shuffle.partitions=200" # Example tuning parameter
+  spark_properties:
+    spark.yarn.queue: "production_queue" # Example: Dedicated production queue
+    # IMPORTANT: Production jobs often require specific configurations for connecting to data sources,
+    # which should use credentials passed securely (e.g., via environment variables sourced from GitHub Secrets).
+    # The PySpark application (e.g., app.py) or shared_utils (e.g., connectors.py, credential_utils.py)
+    # would need to be written to utilize these environment variables.
+    #
+    # Example (these would NOT be hardcoded here but set via secrets and used by the app):
+    # "spark.hadoop.mycorp.db.username": "prod_user" # DO NOT HARDCODE ACTUAL VALUES
+    # "spark.hadoop.mycorp.db.password.env": "PROD_DB_PASSWORD_SECRET_NAME" # App reads this env var
+    
+    "spark.app.name.suffix": "_PROD" # Example to differentiate app names in Production
+    "spark.log.level": "INFO" # Production jobs usually have INFO or WARN level logging
+    # "spark.hadoop.fs.defaultFS": "hdfs://prod-namenode:8020" # If using HDFS for prod
+    # For cloud storage like GCS/S3, ensure appropriate auth mechanisms are configured
+    # (e.g., service accounts for GCP, instance profiles for AWS), often set up at cluster level
+    # or passed via spark-submit using --conf for specific Hadoop connector properties.
+
+# Add other environments as needed, e.g., local_dev, staging
+local_dev:
+  spark_master: "local[*]"
+  deploy_mode: "client" # Typically client mode for local[*]
+  submit_options: []
+  spark_properties:
+    spark.driver.host: "localhost" # Useful for local mode with explicit host

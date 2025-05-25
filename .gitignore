@@ -1,0 +1,23 @@
+# Local secrets file - DO NOT COMMIT
+.local_secrets.json
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+env/
+.venv/
+.env/
+
+# IDE and editor specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Packaged shared utilities
+shared_utils.zip

@@ -1,0 +1,98 @@
+name: Feature Branch CI
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!main'
+      - '!develop' # Exclude develop from push triggers
+  pull_request:
+    branches:
+      - develop # Target develop for PR triggers
+
+jobs:
+  build_and_test:
+    name: Build, Test, and Create PR
+    runs-on: ubuntu-latest
+    # permissions: # Uncomment if 'peter-evans/create-pull-request' needs specific permissions
+    #   pull-requests: write
+    #   contents: write # If the action needs to push a commit (e.g. for --add-paths)
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml pyspark
+          if [ -f ./sample_subject_area/sample_job/requirements.txt ]; then
+            pip install -r ./sample_subject_area/sample_job/requirements.txt
+          else
+            echo "./sample_subject_area/sample_job/requirements.txt not found, skipping job-specific dependencies."
+          fi
+          pip list
+
+      - name: Lint Code (Placeholder)
+        run: |
+          echo "Linting step: Add your linting commands here."
+          # For example: pip install flake8
+          # flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run Unit Tests
+        run: |
+          echo "Running unit tests..."
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          echo "PYTHONPATH is set to: $PYTHONPATH"
+          if [ -d "./sample_subject_area/sample_job/tests" ]; then
+            python -m unittest sample_subject_area/sample_job/tests/test_app.py
+          else
+            echo "No tests found for sample_job, skipping."
+          fi
+
+      - name: Deploy to Development (Conceptual)
+        run: |
+          echo "Simulating deployment to Development environment..."
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          python scripts/run_spark_job.py sample_subject_area/sample_job/app.py local_dev --run
+          echo "\nConceptual deployment to Development complete."
+
+      - name: Create Pull Request to develop
+        if: success() && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' # Also check not on develop
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "auto: CI build and test successful, creating PR to develop" # Updated
+          committer: GitHub Actions <actions@github.com> 
+          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com> 
+          signoff: false 
+          branch: ${{ github.head_ref || github.ref_name }} 
+          base: develop # CHANGED TO DEVELOP
+          delete-branch: false 
+          title: "CI: Merge ${{ github.head_ref || github.ref_name }} into develop" # Updated
+          body: |
+            Automated Pull Request created by CI workflow for the `develop` branch.
+            
+            Branch: `${{ github.head_ref || github.ref_name }}`
+            Status: All build and test steps passed successfully.
+            Conceptual deployment to Development was successful.
+            
+            Please review the changes for merging into the `develop` branch.
+            
+            *Workflow run: [${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}]*
+          labels: |
+            automated-pr
+            ci-generated
+            target-develop # New label
+          # assignees: |
+            # ${{ github.actor }} 
+          # reviewers: |
+            # your-org/your-review-team
+          # draft: false
