@@ -288,14 +288,30 @@ This repository implements a CI/CD pipeline using GitHub Actions to manage the l
     3.  **Create Pull Request to `main` for Production:**
         *   If QA deployment and testing succeed, automatically creates a Pull Request from the `develop` branch to the `main` branch.
         *   This PR is intended for review by a Release Manager before merging into `main` for a production release.
-        *   The PR title and body indicate it's a production release candidate.
 
-**Considerations for both workflows:**
--   **Conceptual Steps:** "Deploy to Development," "Deploy to QA," and "Test in QA" are currently conceptual and use the sample job with specific configurations (`local_dev`, `qa`). Real implementations would involve actual deployment scripts, target environment configurations, and dedicated test suites.
--   **Secrets Management:** For actual deployments to secured environments (Dev, QA, Prod), robust secrets management (using GitHub Secrets for API keys, cluster credentials, etc.) would be essential.
--   **Error Handling and Notifications:** Production-grade workflows would include more sophisticated error handling, notifications (e.g., on Slack or email for failures/successes), and potentially manual approval steps where needed.
+#### 3. Production Deployment Workflow (`.github/workflows/production_workflow.yaml`)
+
+*   **Purpose:** Automates the deployment of production-ready code to the Production environment.
+*   **Triggers:**
+    *   Push of a tag matching the pattern `C*` (e.g., `C123456`) to the `main` branch. This tag is typically applied by a Release Manager and serves as the "Change Number".
+*   **Key Steps:**
+    1.  **Checkout Repository:** Fetches the code corresponding to the pushed tag on `main`.
+    2.  **Extract Tag Name:** The tag (Change Number) is extracted for logging and potential use in deployment scripts.
+    3.  **Set up Python:** Initializes Python 3.9.
+    4.  **Install Dependencies:** Installs global and job-specific Python packages.
+    5.  **Deploy to Production (Conceptual):**
+        *   Simulates deployment to the Production environment.
+        *   Uses `scripts/run_spark_job.py sample_subject_area/sample_job/app.py production --run`. (Requires `production` environment in `config/environments.yaml`).
+        *   This step includes placeholders in the workflow for passing production secrets (e.g., `${{ secrets.PROD_DB_PASSWORD }}`) as environment variables. The application code (`app.py` or shared utilities) would need to be designed to consume these secrets.
+    6.  **Post-Deployment Validation (Conceptual):**
+        *   Simulates running post-deployment checks (e.g., smoke tests, health checks) against the production deployment. Currently, it re-runs sample unit tests as a placeholder.
+
+**Considerations for all workflows:**
+-   **Conceptual Steps:** "Deploy to Development," "Deploy to QA," "Test in QA," "Deploy to Production," and "Post-Deployment Validation" are currently conceptual and use the sample job with specific configurations (`local_dev`, `qa`, `production`). Real implementations would involve actual deployment scripts, target environment configurations, dedicated test suites, and robust secret management.
+-   **Secrets Management:** For actual deployments to secured environments, robust secrets management (using GitHub Secrets for API keys, cluster credentials, etc.) is essential. The Production workflow includes commented-out examples of how secrets would be exposed as environment variables.
+-   **Error Handling and Notifications:** Production-grade workflows would include more sophisticated error handling, notifications (e.g., on Slack or email for failures/successes), and potentially manual approval gates or rollback procedures.
 -   **Linting:** The linting step in `feature_branch_ci.yaml` is a placeholder and should be implemented with a chosen linter.
--   **Production Deployment:** This documentation currently covers up to creating a PR for production. A subsequent workflow would handle the actual deployment to production after the PR to `main` is merged (and potentially after a release tag is created).
+-   **Change Number Usage:** The "Change Number" (tag) is captured in the Production workflow. It can be used for logging, naming deployed resources, or integrating with external change management systems if the deployment scripts are enhanced accordingly.
 
 ## Contributing
 (Details to be added - e.g., branching strategy, code review process, style guides.)
