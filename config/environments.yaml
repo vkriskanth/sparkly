@@ -1,0 +1,41 @@
+# Configuration for different execution environments
+# These are top-level Spark properties or spark-submit options.
+# Job-specific Spark settings can be in the job's own config file and merged.
+
+on_premise:
+  spark_master: "yarn"
+  deploy_mode: "cluster" # or "client"
+  # Additional spark-submit options for on-premise
+  submit_options:
+    - "--conf spark.driver.memory=1g"
+    - "--conf spark.executor.memory=2g"
+    - "--conf spark.executor.instances=2"
+  # Environment-specific properties to be passed as --conf to spark-submit
+  spark_properties:
+    spark.yarn.queue: "default_queue"
+    # Example: "spark.hadoop.fs.defaultFS": "hdfs://your-namenode:8020"
+
+gcp_dataproc:
+  spark_master: "yarn" # Usually yarn for DataProc, cluster name handled by gcloud command
+  deploy_mode: "cluster"
+  # Additional spark-submit options for GCP DataProc
+  # Often, many settings are handled by the `gcloud dataproc jobs submit pyspark` command itself.
+  # This section can include common overrides or specific configurations.
+  submit_options:
+    - "--conf spark.driver.memory=1g" # Example, might be managed by DataProc
+    - "--conf spark.executor.memory=2g" # Example
+    - "--conf spark.executor.instances=2" # Example
+  spark_properties:
+    # Example: "spark.hadoop.google.cloud.auth.service.account.enable": "true"
+    # Example: "spark.hadoop.fs.gs.impl": "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
+    # These might be set by DataProc by default.
+    "spark.eventLog.enabled": "true"
+    # "spark.eventLog.dir": "gs://your-dataproc-staging-bucket/spark-logs/" # Often configured by DataProc
+
+# Add other environments as needed, e.g., local_dev, staging
+local_dev:
+  spark_master: "local[*]"
+  deploy_mode: "client" # Typically client mode for local[*]
+  submit_options: []
+  spark_properties:
+    spark.driver.host: "localhost" # Useful for local mode with explicit host

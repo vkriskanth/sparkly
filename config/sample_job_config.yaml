@@ -1,0 +1,44 @@
+job_name: sample_etl_job
+description: "A sample ETL job to demonstrate configuration."
+
+source_data:
+  path: "data/input/source_files/"
+  format: "csv"
+  options:
+    header: "true"
+    inferSchema: "true"
+  schema_definition: # Optional: could be path to a schema file or inline
+    id: "integer"
+    name: "string"
+    value: "double"
+    event_date: "date"
+
+destination_data:
+  path: "data/output/processed_data/"
+  format: "parquet"
+  partition_by: ["event_date"] # Optional
+  mode: "overwrite" # e.g., append, overwrite, ignore, errorifexists
+
+spark_config:
+  # Settings for on-premise execution
+  on_premise:
+    spark.master: "yarn"
+    spark.submit.deployMode: "cluster"
+    spark.driver.memory: "2g"
+    spark.executor.memory: "4g"
+    spark.executor.cores: 2
+    spark.executor.instances: 5
+    # Add any other on-premise specific spark-submit arguments or configurations
+
+  # Settings for GCP DataProc execution
+  gcp_dataproc:
+    spark.master: "yarn" # Usually yarn for DataProc
+    spark.submit.deployMode: "cluster" # Usually cluster for DataProc
+    # DataProc typically manages resources, but overrides can be placed here
+    # Example: spark.yarn.access.hadoopFileSystems: "gs://your-bucket/"
+    # Add any other GCP DataProc specific spark-submit arguments or configurations
+
+# Job-specific parameters
+parameters:
+  processing_date: "today" # Could be overridden at runtime
+  filter_threshold: 0.5

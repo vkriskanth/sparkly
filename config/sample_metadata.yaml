@@ -1,0 +1,26 @@
+customer_data_v1:
+  description: "Raw customer data from CRM export."
+  source_system: "CRM"
+  path: "/mnt/data/raw/customers_2023.csv" # Example path
+  format: "csv"
+  schema_type: "ddl" # Example: Spark DDL string
+  schema: "id INT, name STRING, email STRING, signup_date DATE"
+  tags: ["raw", "pii"]
+
+product_catalog_v3:
+  description: "Product catalog information."
+  source_system: "PIM"
+  path: "gs://my-bucket/data/product_catalog.parquet" # Example path
+  format: "parquet"
+  schema_type: "struct_fields" # Example: list of field definitions
+  schema:
+    - name: "product_id"
+      type: "string"
+      nullable: false
+    - name: "category"
+      type: "string"
+      nullable: true
+    - name: "price"
+      type: "double"
+      nullable: true
+  data_quality_rules: "config/dq_rules/product_catalog_rules.json" # Path to DQ rules

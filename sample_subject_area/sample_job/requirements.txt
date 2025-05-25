@@ -1,0 +1,10 @@
+# PySpark is usually provided by the cluster environment (on-prem or DataProc)
+# pyspark>=3.0.0 
+
+# Add other specific Python dependencies for this job here
+# Example:
+# pandas==1.5.3
+# numpy==1.23.5
+pyyaml>=5.0 # For config loading if not already present, though shared_utils handles it
+
+# Dependencies for shared_utils will be managed at the repository level or Docker image
