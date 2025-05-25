@@ -32,6 +32,19 @@ gcp_dataproc:
     "spark.eventLog.enabled": "true"
     # "spark.eventLog.dir": "gs://your-dataproc-staging-bucket/spark-logs/" # Often configured by DataProc
 
+qa:
+  spark_master: "yarn" # Or specific QA Spark master, e.g., spark://qa-master:7077
+  deploy_mode: "cluster" # Or "client" depending on QA setup
+  submit_options:
+    - "--conf spark.driver.memory=1g"
+    - "--conf spark.executor.memory=2g"
+    - "--conf spark.executor.instances=2"
+  spark_properties:
+    spark.yarn.queue: "qa_queue" # Example: specific QA queue
+    # Add other QA-specific Spark properties here
+    # e.g., paths to QA databases, different logging levels for QA
+    "spark.app.name.suffix": "_QA" # Example to differentiate app names in QA
+
 # Add other environments as needed, e.g., local_dev, staging
 local_dev:
   spark_master: "local[*]"

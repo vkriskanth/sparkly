@@ -5,9 +5,10 @@ on:
     branches:
       - '*'
       - '!main'
+      - '!develop' # Exclude develop from push triggers
   pull_request:
     branches:
-      - main
+      - develop # Target develop for PR triggers
 
 jobs:
   build_and_test:
@@ -63,32 +64,33 @@ jobs:
           python scripts/run_spark_job.py sample_subject_area/sample_job/app.py local_dev --run
           echo "\nConceptual deployment to Development complete."
 
-      - name: Create Pull Request to main
-        if: success() && github.ref != 'refs/heads/main' # Only run on success and not on main branch itself
+      - name: Create Pull Request to develop
+        if: success() && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' # Also check not on develop
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "auto: CI build and test successful, creating PR"
+          commit-message: "auto: CI build and test successful, creating PR to develop" # Updated
           committer: GitHub Actions <actions@github.com> 
           author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com> 
           signoff: false 
           branch: ${{ github.head_ref || github.ref_name }} 
-          base: main 
+          base: develop # CHANGED TO DEVELOP
           delete-branch: false 
-          title: "CI: Merge ${{ github.head_ref || github.ref_name }} into main"
+          title: "CI: Merge ${{ github.head_ref || github.ref_name }} into develop" # Updated
           body: |
-            Automated Pull Request created by CI workflow.
+            Automated Pull Request created by CI workflow for the `develop` branch.
             
             Branch: `${{ github.head_ref || github.ref_name }}`
             Status: All build and test steps passed successfully.
             Conceptual deployment to Development was successful.
             
-            Please review the changes for merging into the `main` branch.
+            Please review the changes for merging into the `develop` branch.
             
             *Workflow run: [${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}]*
           labels: |
             automated-pr
             ci-generated
+            target-develop # New label
           # assignees: |
             # ${{ github.actor }} 
           # reviewers: |
