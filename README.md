@@ -50,7 +50,8 @@ This framework aims to provide:
         -   `app.py`: Main application script for the job.
         -   `requirements.txt`: Python dependencies for the job.
         -   `Dockerfile`: Docker definition for containerizing the job.
-        -   `dag_folder/`: (Optional) For Airflow DAG definitions related to this job.
+        -   `dag_folder/`: (Optional) For Airflow DAG definitions.
+            -   `sample_job_dag.py`: An example Airflow DAG for the sample job.
         -   `tests/`: Unit/integration tests for this specific job.
 -   `scripts/`: Utility scripts for the repository.
     -   `run_spark_job.py`: Script to construct and run `spark-submit` commands.
@@ -176,6 +177,20 @@ This example runs the sample job in a local development environment. It assumes 
     ```
     Output data for the sample job will be written to `/app/data/output/sample_job_output_data/` *inside the conceptual Docker container path*, or relative to your project root if paths in `sample_job_config.yaml` are adjusted for local non-Docker runs. The current `sample_job/app.py` creates dummy input in `/app/data/input/...` and writes output to `/app/data/output/...` which will translate to `./data/input/...` and `./data/output/...` relative to the project root if you run `app.py` directly or if `spark-submit` is run from project root with these paths.
 
+### Orchestration with Airflow (Example)
+
+The `sample_subject_area/sample_job/dag_folder/sample_job_dag.py` provides an example of how this job could be orchestrated using Apache Airflow.
+The sample DAG uses a `BashOperator` to execute the `scripts/run_spark_job.py` script.
+
+**Key considerations for Airflow integration:**
+-   **DAG Placement:** Airflow needs access to the DAG file. This typically means placing it in Airflow's configured DAGs folder.
+-   **Repository Access:** The Airflow worker environment must have access to the entire repository code, especially `scripts/run_spark_job.py`, `shared_utils/`, and the job's own files. This can be achieved by:
+    -   Including the repository code in the Airflow worker Docker images.
+    -   Using Airflow's GitSync feature.
+    -   Manually placing the repository where workers can access it.
+-   **Path Configuration:** The `repo_home_placeholder` variable within `sample_job_dag.py` must be updated to the actual path of the repository root in the Airflow worker environment. This can be managed via Airflow Variables or environment variables.
+-   **Dependencies:** The Airflow worker environment will need Python, and potentially `apache-airflow-providers-apache-spark` if you choose to use the `SparkSubmitOperator`.
+
 ## Job Structure
 
 Each job is organized within a subject area directory (e.g., `wc_warranty_claims/`, `sales/`). An individual job folder (e.g., `job_1/`) should typically contain:
@@ -183,7 +198,7 @@ Each job is organized within a subject area directory (e.g., `wc_warranty_claims
 -   `other_python_scripts.py`: Additional Python modules used by `app.py`. These should be included in `py_files` in the job config if needed.
 -   `requirements.txt`: Job-specific Python dependencies.
 -   `Dockerfile`: For containerizing the job, especially for cloud or consistent deployments.
--   `dag_folder/`: (Optional) For Airflow DAG definitions if orchestrating this job.
+-   `dag_folder/`: (Optional) For Airflow DAG definitions if orchestrating this job (e.g., `sample_job_dag.py`).
 -   `tests/`: Unit and integration tests for the job's logic.
     -   `test_app.py`: Example test file.
 
