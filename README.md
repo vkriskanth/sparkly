@@ -245,6 +245,49 @@ python -m unittest sample_subject_area/sample_job/tests/test_app.py
 pytest sample_subject_area/sample_job/tests/test_app.py
 ```
 
+## CI/CD Workflow
+
+This repository includes a basic CI (Continuous Integration) workflow using GitHub Actions to automate building, testing, and initiating Pull Requests for feature branches.
+
+### Feature Branch CI (`.github/workflows/feature_branch_ci.yaml`)
+
+**Purpose:**
+To ensure that changes pushed to feature branches are automatically built, tested, and a Pull Request is opened to the `main` branch if all checks pass. This helps maintain code quality and streamlines the review process.
+
+**Triggers:**
+The workflow is triggered on:
+-   Push to any branch **except** `main`.
+-   Pull Request opened or updated targeting the `main` branch.
+
+**Key Steps:**
+
+1.  **Checkout Repository:** Fetches the latest code from the branch.
+2.  **Set up Python:** Initializes a Python environment (currently Python 3.9).
+3.  **Install Dependencies:**
+    -   Installs global Python packages (`pyyaml`, `pyspark`).
+    -   Installs job-specific dependencies from `sample_subject_area/sample_job/requirements.txt`.
+4.  **Lint Code (Placeholder):** A placeholder step for future integration of code linting tools like Flake8 or Pylint.
+5.  **Run Unit Tests:**
+    -   Sets the `PYTHONPATH` to ensure `shared_utils` and job modules are importable.
+    -   Executes unit tests for the sample job (`sample_subject_area/sample_job/tests/test_app.py`) using `unittest`.
+6.  **Deploy to Development (Conceptual):**
+    -   This step simulates a deployment to a development environment.
+    -   It runs the `sample_job` using the `scripts/run_spark_job.py` script with the `local_dev` configuration. This validates that the job can be invoked and run successfully in a basic configuration.
+7.  **Create Pull Request to `main`:**
+    -   If all preceding steps are successful and the workflow is not running on the `main` branch itself, this step uses the `peter-evans/create-pull-request` action.
+    -   It automatically creates a Pull Request from the feature branch to the `main` branch.
+    -   The PR title, body, and labels are pre-filled with information about the CI run and the source branch.
+    -   This step uses the default `GITHUB_TOKEN` for authentication.
+
+**Considerations:**
+-   **Permissions:** The `GITHUB_TOKEN` has default permissions. If more advanced PR manipulations or interactions with other protected resources were needed, the `permissions` block in the workflow file might need adjustment.
+-   **Linting Implementation:** The linting step is currently a placeholder. To make it functional, you would need to:
+    -   Choose a linter (e.g., Flake8).
+    -   Add it to the `Install Python dependencies` step (`pip install flake8`).
+    -   Replace the `echo` commands in the "Lint Code (Placeholder)" step with the actual linting command (e.g., `flake8 .`).
+-   **Secrets for Real Deployments:** The "Deploy to Development (Conceptual)" step is a simulation. A real deployment step would require secure handling of credentials (e.g., using GitHub Secrets) for accessing deployment targets (like cloud platforms or private registries).
+-   **Further CI/CD Enhancements:** This workflow represents the first phase of CI. The full CI/CD pipeline described by the user (Dev -> QA -> Prod with approvals) would require additional, more complex workflows.
+
 ## Contributing
 (Details to be added - e.g., branching strategy, code review process, style guides.)
 
